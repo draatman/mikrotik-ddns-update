@@ -1,0 +1,33 @@
+:local api "fb3453e27e4W7e4geT7f6465g56f436d"
+:local host "mikrotik.draatman.net"
+:local iface "ether_ISP2"
+
+# Get WAN IP
+:local wan ""
+:foreach a in=[/ip address find interface=$iface] do={
+    :set wan [/ip address get $a value-name=address]
+}
+:if ([:len $wan]=0) do={
+    :log warning "Dynu: no IP on $iface – skipping"
+    :return
+}
+:if ([:find $wan "/"]>0) do={
+    :set wan [:pick $wan 0 [:find $wan "/"]]
+}
+
+# Get current DNS IP safely
+:local dns ""
+:if ([:resolve $host] != "") do={
+    :set dns [:resolve $host]
+}
+
+# Update only if changed
+:if ($wan != $dns) do={
+    :log info ("Dynu: updating " . $host . " from " . $dns . " to " . $wan)
+    # Use Dynu legacy API with API key in URL parameter
+    :local url "https://api.dynu.com/nic/update?hostname=$host&myip=$wan&apikey=$api"
+    /tool fetch url=$url mode=https keep-result=no
+    :log info "Dynu: update sent"
+} else={
+    :log info "Dynu: IP unchanged"
+}
