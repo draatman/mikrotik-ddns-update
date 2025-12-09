@@ -1,0 +1,1 @@
+C:\Users\draatman>curl -X GET "https://api.dynu.com/v2/dns" -H "Accept: application/json" -H "API-Key: api-key"
